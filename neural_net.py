@@ -2,7 +2,7 @@
 # TODO : Implement regularization
 # TODO : Option to use ADAM instead of SGD
 # TODO : K-cross validation on GPU
-
+#hello
 import torch
 import numpy as np
 
