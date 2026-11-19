@@ -2,6 +2,7 @@
 # TODO : Implement regularization
 # TODO : Option to use ADAM instead of SGD
 # TODO : Hyperparameter tuning on GPU
+# TODO : Save the model (containing the model parameters)
 
 import torch
 import numpy as np
