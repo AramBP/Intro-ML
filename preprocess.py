@@ -1,3 +1,4 @@
+# TODO : seperate train and test
 import pandas as pd
 import numpy as np
 
@@ -12,12 +13,10 @@ numeric_features = numeric_features.drop(["call_month", "call_hour"])
 
 # Log transform because prior incidents is heavily skewed
 prior_incidents_cols = [c for c in features.columns if c.startswith("prior_incidents_")]
-# print(features[prior_incidents_cols].apply(lambda x : np.log1p(x)).skew().sort_values(ascending=False))
 features[prior_incidents_cols] = features[prior_incidents_cols].apply(lambda x : np.log1p(x))
 
 # Standardize numerical features
-features[numeric_features] = features[numeric_features].apply(
-  lambda x : (x - x.mean())/x.std())
+features[numeric_features] = features[numeric_features].apply(lambda x : (x - x.mean())/x.std())
 
 # Encode call_month and call_hour and call_day as sine/cosine pairs. This helps represening the wrap around of time
 # That is, hour 23 is close to hour 0, december is close to january, sunday is close to monday

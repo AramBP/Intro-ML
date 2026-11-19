@@ -1,7 +1,7 @@
-# TODO : Implement dropouot
+# TODO : Implement dropout
 # TODO : Implement regularization
 # TODO : Option to use ADAM instead of SGD
-# TODO : K-cross validation on GPU
+# TODO : Hyperparameter tuning on GPU
 
 import torch
 import numpy as np
@@ -65,7 +65,9 @@ X = torch.from_numpy(train.drop(columns=['Response']).to_numpy(dtype="float32"))
 y = torch.from_numpy(train[['Response']].to_numpy(dtype="float32"))
 
 # Split training data 80/20
-perm = torch.randperm(X.size(0))
+gen = torch.Generator()
+gen.manual_seed(0)
+perm = torch.randperm(X.size(0), generator=gen)
 X, y = X[perm], y[perm]
 
 split = int(X.size(0) * 0.8)
