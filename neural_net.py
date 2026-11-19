@@ -5,10 +5,13 @@
 
 import torch
 import numpy as np
+import pandas as pd
 
-from preprocess import train
+from preprocess import preprocess
 from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
+
+torch.manual_seed(0)
 
 def get_data(train_ds, valid_ds, batch_size, shuffle=False):
   return (
@@ -21,14 +24,14 @@ def get_model(in_features, out_features, learning_rate, n_hidden_layers, neurons
   if neurons_hidden == None:
     neurons_hidden = int((in_features + out_features) / 2)
 
-  model = nn.Sequential(
-    nn.Linear(in_features, neurons_hidden),
-    nn.ReLU()
-  )
-  hidden_layer = nn.Sequential(nn.Linear(neurons_hidden, neurons_hidden), nn.ReLU())
-  for _ in range (n_hidden_layers):
-    model.extend(hidden_layer)
-  model.extend(nn.Sequential(nn.Linear(neurons_hidden, out_features)))
+  layers = [nn.Linear(in_features, neurons_hidden), nn.ReLU()]
+
+  for _ in range(n_hidden_layers):
+    layers.extend([nn.Linear(neurons_hidden, neurons_hidden), nn.ReLU()])
+
+  layers.append(nn.Linear(neurons_hidden, out_features))
+
+  model = nn.Sequential(*layers) 
 
   opt = optim.SGD(model.parameters(), lr = learning_rate)
 
@@ -61,20 +64,29 @@ def fit(epochs, model, loss_func, opt, train_dl, valid_dl):
     valid_losses.append(val_loss)
   return (valid_losses, train_losses)
 
-X = torch.from_numpy(train.drop(columns=['Response']).to_numpy(dtype="float32"))
-y = torch.from_numpy(train[['Response']].to_numpy(dtype="float32"))
 
+data = pd.read_csv("data/fire_response_train.csv")
 # Split training data 80/20
-gen = torch.Generator()
-gen.manual_seed(0)
-perm = torch.randperm(X.size(0), generator=gen)
-X, y = X[perm], y[perm]
+perm = torch.randperm(data.shape[0])
+data = data.iloc[perm].reset_index(drop=True)
 
-split = int(X.size(0) * 0.8)
-X_train = X[:split,]
-X_valid = X[split:,]
-y_train = y[:split,]
-y_valid = y[split:,]
+split = int(data.shape[0] * 0.8) 
+data_train = data.iloc[:split]
+data_valid = data.iloc[split:]
+
+X_train, train_scaling_stats = preprocess(
+    data_train.drop(columns=["Response"])
+)
+X_valid, _ = preprocess(
+    data_valid.drop(columns=["Response"]),
+    train_scaling_stats
+)
+X_valid = X_valid.reindex(columns=X_train.columns, fill_value=0)
+
+X_train = torch.from_numpy(X_train.to_numpy(dtype="float32"))
+X_valid = torch.from_numpy(X_valid.to_numpy(dtype="float32"))
+y_train = torch.from_numpy(data_train[['Response']].to_numpy(dtype="float32"))
+y_valid = torch.from_numpy(data_valid[['Response']].to_numpy(dtype="float32"))
 
 y_mean, y_std = y_train.mean(), y_train.std()
 y_train = (y_train - y_mean) / y_std
@@ -92,10 +104,8 @@ train_ds = TensorDataset(X_train, y_train)
 valid_ds = TensorDataset(X_valid, y_valid)
 
 train_dl, valid_dl = get_data(train_ds, valid_ds, batch_size)
-in_features = X.size(1)
-out_features = y.size(1)
+in_features = X_train.size(1)
+out_features = y_train.size(1)
 
 model, opt = get_model(in_features, out_features, learning_rate, hidden_layers)
 valid_losses, train_losses = fit(epochs, model, loss_func, opt, train_dl, valid_dl)
-
-"comment van Joy"
