@@ -2,7 +2,8 @@
 import pandas as pd
 import numpy as np
 
-def preprocess(data):
+# Preprocess and return the means and std values that where used to standardize
+def preprocess(data, scaling_stats = None):
   features = data
   # Standardize numerical features except: call_month, call_hour
   numeric_features = features.dtypes[features.dtypes!='string'].index
@@ -13,7 +14,18 @@ def preprocess(data):
   features[prior_incidents_cols] = features[prior_incidents_cols].apply(lambda x : np.log1p(x))
 
   # Standardize numerical features
-  features[numeric_features] = features[numeric_features].apply(lambda x : (x - x.mean())/x.std())
+  if scaling_stats == None:
+    scaling_stats = {
+      col: {
+          "mean": features[col].mean(),
+          "std": features[col].std()
+      }
+      for col in numeric_features
+    }
+
+  features[numeric_features] = features[numeric_features].apply(
+      lambda x: (x - scaling_stats[x.name]["mean"]) / scaling_stats[x.name]["std"]
+  )
 
   # Encode call_month and call_hour and call_day as sine/cosine pairs. This helps represening the wrap around of time
   # That is, hour 23 is close to hour 0, december is close to january, sunday is close to monday
@@ -37,4 +49,4 @@ def preprocess(data):
   features = features.drop(columns=["call_weekday", "call_hour", "call_month"])
   # One hot encoding
   features = pd.get_dummies(features, dummy_na=True)
-  return features.copy()
+  return features.copy(), scaling_stats
