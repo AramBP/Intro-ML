@@ -1,4 +1,4 @@
-# TODO : Implement dropout
+# TODO : Implement dropout -> nn.Dropout()
 # TODO : Implement regularization
 # TODO : Option to use ADAM instead of SGD
 # TODO : Hyperparameter tuning on GPU
