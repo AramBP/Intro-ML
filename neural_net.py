@@ -3,7 +3,7 @@
 # TODO : Option to use ADAM instead of SGD
 # TODO : Hyperparameter tuning on GPU
 # TODO : Save the model (containing the model parameters)
-# TODO : Add sklearn for regressions
+# TODO : Add sklearn for regressions (done)
 
 import torch
 import numpy as np
@@ -12,7 +12,7 @@ import pandas as pd
 from preprocess import preprocess
 from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
-from sklearn.linear_model import LinearRegression 
+from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.metrics import mean_squared_error, r2_score
 
 torch.manual_seed(0)
@@ -114,16 +114,17 @@ out_features = y_train.size(1)
 model, opt = get_model(in_features, out_features, learning_rate, hidden_layers)
 valid_losses, train_losses = fit(epochs, model, loss_func, opt, train_dl, valid_dl)
 
-# Linear Regression
-lr_model = LinearRegression()
+# Linear Regression, Ridge and Lasso regression for comparison (no cross validation yet)
+models = {
+    "Linear Regression": LinearRegression(),
+    "Ridge Regression": Ridge(alpha=1.0),
+    "Lasso Regression": Lasso(alpha=0.1)
+}
 
-lr_model.fit(
-    X_train,
-    data_train["Response"]
-)
+for name, model in models.items():
+    model.fit(X_train, data_train["Response"])
+    pred = model.predict(X_valid)
 
-lr_pred = lr_model.predict(X_valid)
-
-print("\n=== Linear Regression ===")
-print("MSE:", mean_squared_error(data_valid["Response"], lr_pred))
-print("R² :", r2_score(data_valid["Response"], lr_pred))
+    print(f"\n=== {name} ===")
+    print("MSE:", mean_squared_error(data_valid["Response"], pred))
+    print("R² :", r2_score(data_valid["Response"], pred))
