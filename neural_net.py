@@ -12,6 +12,8 @@ import pandas as pd
 from preprocess import preprocess
 from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
+from sklearn.linear_model import LinearRegression 
+from sklearn.metrics import mean_squared_error, r2_score
 
 torch.manual_seed(0)
 
@@ -111,3 +113,17 @@ out_features = y_train.size(1)
 
 model, opt = get_model(in_features, out_features, learning_rate, hidden_layers)
 valid_losses, train_losses = fit(epochs, model, loss_func, opt, train_dl, valid_dl)
+
+# Linear Regression
+lr_model = LinearRegression()
+
+lr_model.fit(
+    X_train,
+    data_train["Response"]
+)
+
+lr_pred = lr_model.predict(X_valid)
+
+print("\n=== Linear Regression ===")
+print("MSE:", mean_squared_error(data_valid["Response"], lr_pred))
+print("R² :", r2_score(data_valid["Response"], lr_pred))
