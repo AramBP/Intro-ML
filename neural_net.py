@@ -1,6 +1,6 @@
-# TODO : Implement dropout -> nn.Dropout()
+# TODO : Implement dropout -> nn.Dropout() (done)
 # TODO : Implement regularization
-# TODO : Option to use ADAM instead of SGD
+# TODO : Option to use ADAM instead of SGD (done)
 # TODO : Hyperparameter tuning on GPU
 # TODO : Save the model (containing the model parameters)
 # TODO : Add sklearn for regressions (done)
@@ -28,17 +28,18 @@ def get_model(in_features, out_features, learning_rate, n_hidden_layers, neurons
   if neurons_hidden == None:
     neurons_hidden = int((in_features + out_features) / 2)
 
-  layers = [nn.Linear(in_features, neurons_hidden), nn.ReLU()]
+  dropout_rate = 0.2 #can change this to a hyperparameter
+  layers = [nn.Linear(in_features, neurons_hidden), nn.ReLU(), nn.Dropout(dropout_rate)]
 
   for _ in range(n_hidden_layers):
-    layers.extend([nn.Linear(neurons_hidden, neurons_hidden), nn.ReLU()])
+    layers.extend([nn.Linear(neurons_hidden, neurons_hidden), nn.ReLU(), nn.Dropout(dropout_rate)])
 
   layers.append(nn.Linear(neurons_hidden, out_features))
 
   model = nn.Sequential(*layers) 
 
-  opt = optim.SGD(model.parameters(), lr = learning_rate)
-
+  #opt = optim.SGD(model.parameters(), lr = learning_rate)
+  opt = optim.Adam(model.parameters(), lr = learning_rate)
   return (model, opt)
 
 def loss_batch(model, loss_func, xb, yb, opt=None):
