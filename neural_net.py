@@ -1,3 +1,10 @@
+# TODO : Implement dropout -> nn.Dropout() (done)
+# TODO : Implement regularization (done)
+# TODO : Option to use ADAM instead of SGD (done)
+# TODO : Hyperparameter tuning on GPU (mee bezig)
+# TODO : Save the model (containing the model parameters)
+# TODO : Add sklearn for regressions (done)
+
 import torch
 import numpy as np
 import pandas as pd
@@ -31,8 +38,8 @@ def get_model(in_features, out_features, learning_rate, n_hidden_layers, weight_
 
     model = nn.Sequential(*layers)
 
-  # opt = optim.SGD(model.parameters(), lr=learning_rate,weight_decay=weight_decay)
-    opt = optim.Adam(model.parameters(), lr=learning_rate,weight_decay=weight_decay)
+  # opt = optim.SGD(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
+    opt = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 
     return (model, opt)
 
@@ -107,17 +114,22 @@ loss_func = nn.MSELoss()
 param_grid = {
     "learning_rate": [1e-4, 1e-3, 1e-2],
     "weight_decay": [0, 1e-4, 1e-3],
-    "hidden_layers": [1, 2, 3]
+    "hidden_layers": [1, 2, 3],
+    "neurons_hidden": [32, 64, 128],
+    "dropout_rate": [0.0, 0.2, 0.4]
 }
+
 
 best_loss = float("inf")
 best_params = None
 best_model = None
 
-for lr, wd, layers in product(
+for lr, wd, layers, neurons, dropout in product(
     param_grid["learning_rate"],
     param_grid["weight_decay"],
-    param_grid["hidden_layers"]
+    param_grid["hidden_layers"],
+    param_grid["neurons_hidden"],
+    param_grid["dropout_rate"]
 ):
 
     print(f"Testing lr={lr}, "f"wd={wd}, "f"layers={layers}")
@@ -127,8 +139,9 @@ for lr, wd, layers in product(
         out_features=out_features,
         learning_rate=lr,
         n_hidden_layers=layers,
-        weight_decay=wd
-    )
+        weight_decay=wd,
+        neurons_hidden=neurons,
+        dropout_rate=dropout)
 
     valid_losses, _ = fit(epochs, model, loss_func, opt, train_dl, valid_dl)
 
@@ -137,7 +150,7 @@ for lr, wd, layers in product(
 
     if final_val_loss < best_loss:
         best_loss = final_val_loss
-        best_params = {"learning_rate": lr, "weight_decay": wd, "hidden_layers": layers}
+        best_params = {"learning_rate": lr, "weight_decay": wd, "hidden_layers": layers, "neurons_hidden": neurons, "dropout_rate": dropout}
         best_model = model
 
 print("\nBest parameters:")
