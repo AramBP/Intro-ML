@@ -115,6 +115,22 @@ out_features = y_train.size(1)
 model, opt = get_model(in_features, out_features, learning_rate, hidden_layers)
 valid_losses, train_losses = fit(epochs, model, loss_func, opt, train_dl, valid_dl)
 
+# Evaluate neural network on validation set
+model.eval()
+
+with torch.no_grad():
+    nn_pred = model(X_valid)
+
+# Convert predictions back to original target scale
+nn_pred = nn_pred * y_std + y_mean
+
+# Convert to numpy
+nn_pred = nn_pred.numpy().flatten()
+
+print("\n=== Neural Network ===")
+print("MSE:", mean_squared_error(data_valid["Response"], nn_pred))
+print("R² :", r2_score(data_valid["Response"], nn_pred))
+
 # Linear Regression, Ridge and Lasso regression for comparison (no cross validation yet)
 models = {
     "Linear Regression": LinearRegression(),
