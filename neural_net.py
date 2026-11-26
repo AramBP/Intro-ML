@@ -23,12 +23,11 @@ def get_data(train_ds, valid_ds, batch_size, shuffle=False):
     DataLoader(valid_ds, batch_size=batch_size*2)
   )
 
-def get_model(in_features, out_features, learning_rate, n_hidden_layers, neurons_hidden = None):
+def get_model(in_features, out_features, learning_rate, n_hidden_layers, neurons_hidden = None, dropout_rate = 0.2):
   # Use rule of thumb for number of hidden neurons if no argument is provided
   if neurons_hidden == None:
     neurons_hidden = int((in_features + out_features) / 2)
 
-  dropout_rate = 0.2 #can change this to a hyperparameter
   layers = [nn.Linear(in_features, neurons_hidden), nn.ReLU(), nn.Dropout(dropout_rate)]
 
   for _ in range(n_hidden_layers):
