@@ -59,7 +59,6 @@ def fit(epochs, model, loss_func, opt, train_dl, valid_dl):
         *[loss_batch(model, loss_func, xb, yb) for xb, yb in valid_dl]
       )
     val_loss = np.sum(np.multiply(losses, nums)) / np.sum(nums)
-    print(epoch, val_loss)
     valid_losses.append(val_loss)
   return (valid_losses, train_losses)
 
@@ -102,8 +101,6 @@ train_dl, valid_dl = get_data(train_ds, valid_ds, batch_size)
 in_features = X_train.size(1)
 out_features = y_train.size(1)
 
-model, opt = get_model(in_features, out_features, learning_rate, hidden_layers)
-valid_losses, train_losses = fit(epochs, model, loss_func, opt, train_dl, valid_dl)
 loss_func = nn.MSELoss()
 
 # Hyperparameter tuning
